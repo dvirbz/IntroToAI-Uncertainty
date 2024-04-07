@@ -1,0 +1,118 @@
+<HTML>
+<HEAD>
+<TITLE>AI Programming Assignment 4</TITLE>
+<LINK REV="made" HREF="mailto:webmaster@cs.bgu.ac.il">
+
+</HEAD>
+
+<BODY>
+        <CENTER>
+        <H1>Introduction to Artificial Inteligence </H1>
+        <H3>Programming Assignment 4</H3>
+        </CENTER>
+<HR>
+        <CENTER>
+<H2> Programming assignment - Decision-making under uncertainty  </H2>
+<H2>MAPD Problem</H2>
+        </CENTER>
+<p>
+
+<H3>Goals </H3>
+<P>
+Sequential decision making under uncertainty using 
+belief-state MDP for decision-making in the MAPD.
+(This is an obscure variant of the Canadian traveler problem.)
+
+<H3>MAPD Delivery Decision Problem - Domain Description</H3>
+
+<P>
+The domain description is similar to that described in assignment 1,
+except that again  we do not know the locations of the blocakges.
+For simplicity, however, we will assume that the blockages occur independently, (i.e. that all fragile edges that
+will be blocked are
+already been blocked, but we don't know for certain whether they are) with a known
+given probability. They are revealed with certainty when the agent reaches 
+an adjacent vertex.
+
+<P>
+Thus, in the current problem to be solved, we are given a grid-based
+undirected graph, where each edge has a known probability of being blocked.
+These distributions are jointly independent.
+The agent's only actions are traveling between vertices.
+Also for simplicity, we will assume only one agent, starting at s already holding a package, and only one known
+delivery location.
+The problem is to find a policy that delivers the package in as short a time as possible (in expectation).
+
+<P>
+The graph can be provided in a manner similar to previous assignments, for example:
+
+
+<pre>
+#X 4                ; Maximum x coordinate
+#Y 3                ; Maximum y coordinate
+#P 0 0 0  D 4 3 50  ; Package at (0,3) from time 5, deliver to (4,0) on or before time 50
+#B 3 0 4 0          ; Edge from (3,0) to (4,0) is always blocked
+#B 2 2 2 3          ; Edge from (2,2) to (2,3) is always blocked
+#F 0 1 0 2 0.4      ; Edge from (0,1) to (0,2) is fragile, blocked with probability 0.4 
+#A 0 0              ; Normal agent starts at (0,0)
+</pre>
+
+
+<P>
+The start and goal (target) vertices, should be determined via some
+form of user input (as in the file, or querying the user). For example,
+in the above graph the start vertex is (0,0), and the goal (target) vertex is (4,3).
+
+<H3>Solution method</H3>
+
+<P>
+The Canadian traveller problem is known to be PSPACE-complete (and it is likely that the
+uncertain MAPD problem is also PSPACE-complete) so you will
+be required to solve only very small instances. We will require that the
+entire belief space be stored in memory explicitly, and thus impose a limit
+of grid size at most 6 by 6 with at most 10 possible uncertain blockages.
+Your program should initialize
+belief space value functions and use a form of value iteration
+(discussed in class) to compute the value function for
+the belief states. Maintain the
+optimal action during the value iteration for each belief state,
+so that you have the optimal policy at convergence.
+
+
+<H3>Requirements </H3>
+
+<P>
+Your program should read the data, including the parameters
+(start and target vertices). You should construct the policy, and
+present it in some way. Provide at least the following types of output:
+
+<OL>
+<LI> A full printout of the value of each belief-state, and the
+     optimal action in that belief state, if it exists. 
+     (Print something that indicates so if this state is irregular,
+     e.g. if it is unreachable).
+<LI> Run a sequence of simulations. That is, generate a graph instance
+     (blockage locations) according to the  distributions, and run the
+     agent through this graph based on the (optimal) policy computed 
+     by your algorithm. Display the graph instance and sequence of actions.
+     Allow the user to run additional simulations, for a newly generated
+     instance in each case.
+</OL>
+
+
+
+<H3>Deliverables </H3>
+
+<OL>
+<LI> Source code and executable files of programs.
+<LI> Explanation of the method employed in your algorithm.
+<LI> Non-trivial example runs on at least 2 scenarios,
+including the input and output.
+<LI> Submit makefile and short description on how to run your program.
+</OL>
+
+<P>
+
+Official deadline: TBA, 2024
+</BODY>
+</HTML>
