@@ -1,8 +1,10 @@
 from enum import Enum
 from typing import Tuple
+import copy
 import networkx as nx
 from package import Package
 from type_aliases import Node, Edge
+from utils import GetNeighbors
 
 class Grid:
     """Simulator's Grid"""
@@ -19,7 +21,9 @@ class Grid:
         self._graph: nx.Graph = nx.grid_2d_graph(x + 1, y + 1)
         self._fragEdges: dict[Edge, float] = {}
         self._packages: dict[Node, list[Package]] = {}
-
+        self._uncertaintyEdges: tuple[tuple[Edge, int]] = () # -1 for unknown, 0 for blocked, 1 for open
+        self._policy: dict[Node, dict[tuple[tuple[Edge, int]], tuple[Node, float]]] = {}
+    
     @property
     def size(self) -> Tuple[int, int]:
         """Returns the size of the grid"""
@@ -47,6 +51,24 @@ class Grid:
             dict: {Node: Package}
         """
         return self._packages
+    
+    @property
+    def uncertaintyEdges(self) -> dict[Node, list[Package]]:
+        """returns self._packages
+
+        Returns:
+            dict: {Node: Package}
+        """
+        return self._uncertaintyEdges
+    
+    @property
+    def policy(self) -> dict[Node, list[Package]]:
+        """returns self._packages
+
+        Returns:
+            dict: {Node: Package}
+        """
+        return self._policy
 
     def UpdateGrid(self, cmd: str, params: list[str] | Edge) -> None:
         """Updates grid
@@ -145,6 +167,56 @@ class Grid:
 
         return dropdowns
 
+    def GetUncertaintyPolicy(self, startNode: Node, endNode: Node) -> dict[Node, dict[tuple[tuple[Edge, int]], tuple[Node, float]]]:
+        """Returns the uncertainty policy of the grid
+
+        Returns:
+            dict[Node, dict[Node, float]]: The uncertainty policy of the grid
+        """
+        if startNode == endNode: #might need to be different
+            return self.policy
+        self.policy = {endNode: {(): 0}} | ({node: {self._uncertaintyEdges: float('-inf')} for node in self.graph.nodes() if node != endNode})
+        actions = [(endNode,node) for node in GetNeighbors(self, endNode)]
+        for action in actions:
+            gridCopy = copy.deepcopy(self)
+            self.UpdatePolicy(endNode, action) #Might need to be global
+            if action in self._fragEdges:
+                gridCopy.fragEdges.remove(action) # need to account for reversability            
+            gridCopy.GetUncertaintyPolicy(startNode, action[1])
+            self.policy = gridCopy.policy # change to update based on max and combine T and F options to U based on their probabilities
+            
+        return self.policy
+                   
+    def UpdatePolicy(self, current: Node, action: Edge) -> None:
+        """Updates the policy of the grid
+
+        Args:
+            current (Node): The current node
+            action (Edge): The action to be taken
+        """
+        if action in self._fragEdges:
+            pass
+            # update action[1] with F in policy and -1 in value If exitsts F get max and update the best action
+            # update action[0]/current with T in policy and -2 in value
+        else:
+            pass
+            # update action[1] with U in policy and -1 in value
+            
+    def UpdatePolicyValue(self, node: Node, destNode: Node, stepValue: float, uncertaintyEdges: tuple[tuple[Edge, int]]) -> None:
+        """Updates the policy value of the grid
+
+        Args:
+            node (Node): The current node
+            destNode (Node): The destination node
+            stepValue (float): The step value
+            uncertaintyEdges (tuple[tuple[Edge, int]]): The uncertainty edges
+        """
+        currentValue = self.policy.get(node, {}).get(uncertaintyEdges, (float('-inf'), None))
+        if currentValue[0] == float('-inf'):
+            self.policy[node][uncertaintyEdges] = (self.policy[destNode][uncertaintyEdges] + stepValue, destNode)
+        else:
+            self.policy[node][uncertaintyEdges] = max(currentValue, (self.policy[destNode][uncertaintyEdges] + stepValue, destNode))
+            
 class UpdateGridType(Enum):
     """Enum for options to update grid."""
     ACTION = 'ACT'
